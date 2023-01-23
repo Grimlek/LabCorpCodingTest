@@ -1,0 +1,129 @@
+﻿@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using LabcorpCodingTest.Domain
+@using LabcorpCodingTest.Domain.Entities
+@using LabcorpCodingTest.Domain.Enums
+@using LabCorpCodingTest
+
+@model HomeViewModel
+
+@{
+    ViewData["Title"] = "Employees";
+}
+
+<div class="text-start mb-4 mt-3">
+    <h3 class="display-5">Employees</h3>    
+</div>
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <table class="table table-striped">
+            <thead>
+            <tr class="d-flex">
+                <th class="col-1">Id</th>
+                <th class="col-2">Vacation Days Available</th>
+                <th class="col-2">Vacation Days Used</th>
+                <th class="col-2">Days Worked</th>
+                <th class="col-1">Wage</th>
+                <th class="col-1">Is Manager?</th>
+                <th class="col-2"></th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (Employee employee in Model.Employees)
+            {
+                <tr data-id="@employee.Id" class="d-flex">
+                    <td class="col-1">@employee.Id</td>
+                    <td class="col-2">@employee.VacationDays</td>
+                    <td class="col-2">@employee.VacationDaysUsed</td>
+                    <td class="col-2">@employee.DaysWorked</td>
+                    <td class="col-1">@(employee.EmployeeWageType == EmployeeWageType.Hourly ? "Hourly" : "Salary")</td>
+                    <td class="col-1">@(employee.IsManager ? "Yes" : "No")</td>
+                    <td class="col-2 call-to-actions-column text-center">
+                        <button type="button" class="btn btn-outline-success btn-sm btn-update-work-days w-75"
+                                data-bs-target="#workDaysModal">
+                            Edit Days Worked
+                        </button>
+                        <button type="button" class="btn btn-outline-success btn-sm btn-update-vacation-days w-75 mt-1"
+                                data-bs-target="#vacationDaysModal">
+                            Take Vacation Days
+                        </button>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Modals {
+    <div id="workDaysModal" class="modal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Update Days Worked</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form method="post" asp-action="Work" asp-controller="Home">
+                    <div class="modal-body">
+                        <div class="form-floating mb-1">
+                            <input id="updateWorkDaysInput" asp-for="@Model.WorkDaysViewModel.DaysWorkedThisYear"
+                                   class="form-control" type="number"
+                                   min="0" max="@(DomainConstants.WorkDaysInYear)" />
+                            <label for="updateWorkDaysInput">Days Worked This Year</label>
+                        </div>
+                        @Html.ValidationMessageFor(model => 
+                            model.WorkDaysViewModel.DaysWorkedThisYear, "", new { @class = "text-danger" })
+
+                        @Html.HiddenFor(model => model.WorkDaysViewModel.EmployeeId)
+
+                        @Html.AntiForgeryToken()
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-primary">Save</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="vacationDaysModal" class="modal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Take Vacation Days</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form method="post" asp-action="TakeVacation" asp-controller="Home">
+                    <div class="modal-body">
+                        <div class="form-floating mb-1">
+                            <input id="updateVacationDaysInput" asp-for="@Model.VacationDaysViewModel.VacationDaysToTake" 
+                                   class="form-control" type="number" 
+                                   min="0" max="@(DomainConstants.WorkDaysInYear)" step=".1"/>
+                            <label for="updateWorkDaysInput">Vacation Days to Take</label>
+                        </div>
+                        @Html.ValidationMessageFor(model => 
+                            model.VacationDaysViewModel.VacationDaysToTake, "", new { @class = "text-danger" })
+                        
+                        @Html.HiddenFor(model => model.VacationDaysViewModel.EmployeeId)
+                        
+                        @Html.AntiForgeryToken()
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-primary">Save</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script src="~/js/pages/home.js" asp-append-version="true" type="text/javascript"></script>
+    
+    <script type="text/javascript">
+        const showWorksModalOnPageLoad = @Json.Serialize(TempData[Constants.ViewData.ShowWorkModal] ?? false);
+        const showVacationModalOnPageLoad = @Json.Serialize(TempData[Constants.ViewData.ShowVacationModal] ?? false);
+    </script>
+}
